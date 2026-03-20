@@ -66,35 +66,32 @@ def classify_from_ai(unknown_names: list[str]) -> dict[str, str]:
     Returns:
         dict[str, str]: Mapping of {name: gender} for names classified by AI
 
+    Raises:
+        Exception: If the OpenAI API call fails (connection error, auth error, etc.)
+
     Side effects:
         - Makes API call to OpenAI
         - Logs count of names classified
-        - Logs ERROR if API call fails
     """
     if not unknown_names:
         return {}
 
-    try:
-        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-        prompt = f"Classify the gender of these Arabic first names as Male or Female: {', '.join(unknown_names)}"
+    prompt = f"Classify the gender of these Arabic first names as Male or Female: {', '.join(unknown_names)}"
 
-        response = client.beta.chat.completions.parse(
-            model="gpt-5.4-nano",
-            messages=[{"role": "user", "content": prompt}],
-            response_format=PatientGenderList,
-        )
+    response = client.responses.parse(
+        model="gpt-5.4-nano",
+        input=[{"role": "user", "content": prompt}],
+        text_format=PatientGenderList,
+    )
 
-        result = {}
-        for patient in response.choices[0].message.parsed.patients:
-            result[patient.name] = patient.gender
+    result = {}
+    for patient in response.output_parsed.patients:
+        result[patient.name] = patient.gender
 
-        logger.info(f"OpenAI classified {len(result)} names")
-        return result
-
-    except Exception as e:
-        logger.error(f"OpenAI classification failed: {e}")
-        return {}
+    logger.info(f"OpenAI classified {len(result)} names")
+    return result
 
 
 def classify_genders(df: pd.DataFrame, gender_df: pd.DataFrame) -> pd.DataFrame:
