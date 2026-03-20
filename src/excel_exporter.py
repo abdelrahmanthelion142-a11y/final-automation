@@ -9,7 +9,7 @@ import logging
 
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment
+from openpyxl.styles import Font
 
 
 logger = logging.getLogger(__name__)
@@ -58,12 +58,6 @@ def export_to_excel(df: pd.DataFrame, output_path: str) -> str:
     ws = wb.active
     ws.title = "Follow-Up"
 
-    # Make the columns wider for readability
-    ws.column_dimensions['A'].width = 18  # PhoneNumber
-    ws.column_dimensions['B'].width = 65  # Message
-    ws.column_dimensions['C'].width = 25  # Date
-    ws.column_dimensions['D'].width = 18  # WhatsApp Link
-
     ws.append(["PhoneNumber", "Message", "Date", "WhatsApp Link"])
 
     for i, (idx, row) in enumerate(df.iterrows()):
@@ -73,10 +67,7 @@ def export_to_excel(df: pd.DataFrame, output_path: str) -> str:
 
         row_num = i + 2
         ws.cell(row=row_num, column=1, value=phone)
-        
-        msg_cell = ws.cell(row=row_num, column=2, value=message)
-        msg_cell.alignment = Alignment(wrap_text=True)  # Allow multi-line messages
-        
+        ws.cell(row=row_num, column=2, value=message)
         ws.cell(row=row_num, column=3, value=date)
 
         if "?" in phone:
