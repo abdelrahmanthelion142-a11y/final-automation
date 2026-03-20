@@ -132,7 +132,7 @@ def upload_excel(local_path: str, file_id: str) -> None:
     media = MediaFileUpload(
         local_path,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        resumable=False
+        resumable=True
     )
 
     # Upload content AND rename in a single API call.

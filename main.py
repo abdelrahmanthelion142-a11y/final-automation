@@ -99,7 +99,9 @@ def main():
         raise
 
     if len(df) == 0:
-        logger.warning("No appointments found — skipping Excel export and Drive upload.")
+        logger.warning(
+            "No appointments found — skipping Excel export and Drive upload."
+        )
         return
 
     df = normalize_phones(df)
@@ -145,12 +147,7 @@ def main():
 
     df["DoctorArabic"] = df["Doctor"].apply(translate_doctor)
 
-    df["Message"] = df.apply(
-        lambda r: generate_message(
-            r["_first_name"], r["Gender"], r["DoctorArabic"], r["Date"]
-        ),
-        axis=1,
-    )
+    df["Message"] = df.apply(generate_message, axis=1)
 
     start_date, end_date = get_date_range_for_filename()
     filename = f"WellSkin_Followup_{start_date}_to_{end_date}.xlsx"
