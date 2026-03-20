@@ -99,7 +99,7 @@ def main():
         raise
 
     if len(df) == 0:
-        logger.info("No appointments found.")
+        logger.warning("No appointments found — skipping Excel export and Drive upload.")
         return
 
     df = normalize_phones(df)
@@ -140,6 +140,8 @@ def main():
             logger.info("CSV updated on Google Drive")
         except Exception as e:
             logger.warning(f"Failed to upload updated CSV: {e}")
+    else:
+        logger.info("No new gender classifications — CSV unchanged")
 
     df["DoctorArabic"] = df["Doctor"].apply(translate_doctor)
 
@@ -155,9 +157,12 @@ def main():
 
     export_to_excel(df, filename)
 
+    file_size = os.path.getsize(filename)
+    logger.info(f"Excel file created: {filename} ({file_size} bytes, {len(df)} rows)")
+
     try:
         upload_excel(filename, os.environ["DRIVE_EXCEL_FILE_ID"])
-        logger.info(f"Excel updated on Google Drive")
+        logger.info(f"Excel uploaded to Google Drive successfully")
     except Exception as e:
         logger.error(f"Failed to update Excel on Drive: {e}")
         raise

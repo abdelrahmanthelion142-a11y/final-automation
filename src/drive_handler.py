@@ -135,16 +135,18 @@ def upload_excel(local_path: str, file_id: str) -> None:
         resumable=True
     )
 
-    # We do NOT pass parents or metadata when updating content
-    service.files().update(
+    # Upload content AND rename in a single API call.
+    # Using two separate update() calls was causing the file content
+    # to not persist — the second metadata-only update() could reset
+    # the file content on empty placeholder files.
+    new_name = os.path.basename(local_path)
+    metadata = {'name': new_name}
+
+    result = service.files().update(
         fileId=file_id,
+        body=metadata,
         media_body=media,
         supportsAllDrives=True,
     ).execute()
 
-    # Rename the file in Drive so the user knows what date range it covers
-    new_name = os.path.basename(local_path)
-    metadata = {'name': new_name}
-    service.files().update(fileId=file_id, body=metadata, supportsAllDrives=True).execute()
-
-    logger.info(f"Updated Excel file on Drive and renamed to {new_name}")
+    logger.info(f"Updated Excel file on Drive: id={result.get('id')}, name={new_name}")
