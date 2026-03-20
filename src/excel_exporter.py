@@ -6,6 +6,7 @@ patient follow-up message.
 
 import urllib.parse
 import logging
+from datetime import datetime
 
 import pandas as pd
 from openpyxl import Workbook
@@ -13,6 +14,28 @@ from openpyxl.styles import Font
 
 
 logger = logging.getLogger(__name__)
+
+
+def format_date(date_str: str) -> str:
+    """Format a date string to remove timezone/time components.
+
+    Args:
+        date_str: Date string in various formats (ISO, YYYY-MM-DD, etc.)
+
+    Returns:
+        str: Date in YYYY-MM-DD format
+    """
+    if not date_str or date_str == "nan":
+        return ""
+
+    try:
+        if "T" in date_str:
+            dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+            return dt.strftime("%Y-%m-%d")
+        else:
+            return date_str.split(" ")[0]
+    except (ValueError, TypeError):
+        return date_str
 
 
 def make_wa_url(phone: str, message: str) -> str:
@@ -60,15 +83,15 @@ def export_to_excel(df: pd.DataFrame, output_path: str) -> str:
 
     ws.append(["PhoneNumber", "Message", "Date", "WhatsApp Link"])
 
-    ws.column_dimensions['A'].width = 20
-    ws.column_dimensions['B'].width = 100
-    ws.column_dimensions['C'].width = 15
-    ws.column_dimensions['D'].width = 20
+    ws.column_dimensions["A"].width = 20
+    ws.column_dimensions["B"].width = 80
+    ws.column_dimensions["C"].width = 15
+    ws.column_dimensions["D"].width = 15
 
     for i, (idx, row) in enumerate(df.iterrows()):
         phone = str(row["PhoneNumber"])
         message = str(row["Message"])
-        date = str(row["Date"])
+        date = format_date(str(row["Date"]))
 
         row_num = i + 2
         ws.cell(row=row_num, column=1, value=phone)

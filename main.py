@@ -31,16 +31,16 @@ def get_date_range() -> tuple[str, str]:
 
     Returns:
         tuple[str, str]: Two ISO-formatted strings:
-            - Start: Today at 00:00:00 UTC
-            - End: Today + 7 days at 23:59:59 UTC
+            - Start: Today - 7 days at 00:00:00 UTC
+            - End: Today at 23:59:59 UTC
     """
     today = datetime.now(timezone.utc).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
-    to_date = today + timedelta(days=7)
+    from_date = today - timedelta(days=7)
 
-    start = today.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-    end = to_date.strftime("%Y-%m-%dT23:59:59.000Z")
+    start = from_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    end = today.strftime("%Y-%m-%dT23:59:59.000Z")
 
     return start, end
 
