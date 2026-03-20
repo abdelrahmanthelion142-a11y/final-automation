@@ -80,7 +80,7 @@ def classify_from_ai(unknown_names: list[str]) -> dict[str, str]:
         prompt = f"Classify the gender of these Arabic first names as Male or Female: {', '.join(unknown_names)}"
 
         response = client.beta.chat.completions.parse(
-            model="gpt-4o-mini",
+            model="gpt-5.4-nano",
             messages=[{"role": "user", "content": prompt}],
             response_format=PatientGenderList,
         )
