@@ -60,6 +60,11 @@ def export_to_excel(df: pd.DataFrame, output_path: str) -> str:
 
     ws.append(["PhoneNumber", "Message", "Date", "WhatsApp Link"])
 
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 100
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 20
+
     for i, (idx, row) in enumerate(df.iterrows()):
         phone = str(row["PhoneNumber"])
         message = str(row["Message"])

@@ -46,7 +46,8 @@ def classify_from_csv(
         logger.info("Gender CSV is empty")
         return {}
 
-    gender_map = dict(zip(gender_df["Patient"], gender_df["Gender"]))
+    cleaned_genders = gender_df["Gender"].astype(str).str.strip().str.capitalize()
+    gender_map = dict(zip(gender_df["Patient"], cleaned_genders))
 
     found = {}
     for name in first_names:
