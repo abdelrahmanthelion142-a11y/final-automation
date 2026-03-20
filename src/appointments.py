@@ -53,7 +53,7 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
     token = os.environ.get("EHR_TOKEN", "")
     branch_id = int(os.environ.get("BRANCH_ID", "1"))
 
-    endpoint = "https://vt.cr-ehr.com/graphql"
+    endpoint = os.environ.get("EHR_ENDPOINT", "https://vt.cr-ehr.com/graphql")
 
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 

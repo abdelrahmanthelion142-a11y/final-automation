@@ -18,6 +18,7 @@ jobs:
       - name: Run pipeline
         env:
           EHR_TOKEN: ${{ secrets.EHR_TOKEN }}
+          EHR_ENDPOINT: ${{ secrets.EHR_ENDPOINT }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           DRIVE_CSV_FILE_ID: ${{ secrets.DRIVE_CSV_FILE_ID }}
