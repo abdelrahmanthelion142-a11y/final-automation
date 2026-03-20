@@ -34,14 +34,16 @@ def generate_message(
         - If doctor_arabic == "آية": no prefix (use name as-is)
         - Otherwise: prefix with "د/" → "د/{doctor_arabic}"
     """
-    if gender == "Female":
+    gender_clean = str(gender).strip().lower()
+
+    if gender_clean == "female":
         verb = "تكوني"
-    elif gender == "Male":
+    elif gender_clean == "male":
         verb = "تكون"
     else:
         verb = "تكون"
         logger.warning(
-            f"Unknown gender for patient '{patient_name}', defaulting to masculine form"
+            f"Unknown gender for patient '{patient_name}' (got '{gender}'), defaulting to masculine form"
         )
 
     if doctor_arabic == "آية":
