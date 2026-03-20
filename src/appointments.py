@@ -12,17 +12,38 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+BASE_URL = "https://cr-ehr.com"
+GRAPHQL_URL = "https://cr-ehr.com/graphql"
+
+BRANCH_ID = "e1c823bf-f2a6-42e3-a1dc-c44d2a5b4352"
+
 APPOINTMENTS_QUERY = """
-query Appointments($from: String!, $to: String!, $branchId: Int!) {
-    appointments(from: $from, to: $to, branchId: $branchId) {
-        patient {
-            name
+query ($status: AppointmentStatus, $dateFrom: Date, $dateTo: Date, $branchId: ID) {
+    appointments(
+        status: $status
+        dateFrom: $dateFrom
+        dateTo: $dateTo
+        branchId: $branchId
+    ) {
+        appointments {
+            id
+            date
+            status
+            patient {
+                id
+                name
+                phoneNo
+            }
+            doctor {
+                id
+                name
+            }
+            branch {
+                id
+                name
+            }
         }
-        date
-        doctor {
-            name
-        }
-        phoneNumber
+        appointmentsCount
     }
 }
 """
@@ -51,18 +72,30 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
         Logs warnings on valid-but-empty API responses
     """
     token = os.environ.get("EHR_TOKEN", "")
-    branch_id = int(os.environ.get("BRANCH_ID", "1"))
 
-    endpoint = os.environ.get("EHR_ENDPOINT", "https://vt.cr-ehr.com/graphql")
-
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-
-    payload = {
-        "query": APPOINTMENTS_QUERY,
-        "variables": {"from": date_from, "to": date_to, "branchId": branch_id},
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Origin": BASE_URL,
+        "Referer": BASE_URL + "/appointments",
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "*/*",
     }
 
-    response = httpx.post(endpoint, json=payload, headers=headers, timeout=30.0)
+    payload = {
+        "operationName": None,
+        "query": APPOINTMENTS_QUERY,
+        "variables": {
+            "status": "Scheduled",
+            "dateFrom": date_from,
+            "dateTo": date_to,
+            "branchId": BRANCH_ID,
+        },
+    }
+
+    response = httpx.post(
+        GRAPHQL_URL, json=payload, headers=headers, timeout=30.0, follow_redirects=True
+    )
     response.raise_for_status()
 
     data = response.json()
@@ -71,7 +104,8 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
         logger.warning(f"EHR API returned errors: {data['errors']}")
         return pd.DataFrame(columns=["Patient", "Date", "Doctor", "PhoneNumber"])
 
-    appointments = data.get("data", {}).get("appointments", [])
+    appt_data = data.get("data", {}).get("appointments", {})
+    appointments = appt_data.get("appointments", []) if appt_data else []
 
     if not appointments:
         logger.warning("No appointments returned from EHR API")
@@ -84,7 +118,7 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
                 "Patient": appt.get("patient", {}).get("name", ""),
                 "Date": appt.get("date", ""),
                 "Doctor": appt.get("doctor", {}).get("name", ""),
-                "PhoneNumber": appt.get("phoneNumber", ""),
+                "PhoneNumber": appt.get("patient", {}).get("phoneNo", ""),
             }
         )
 
