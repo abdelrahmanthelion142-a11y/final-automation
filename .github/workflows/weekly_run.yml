@@ -21,5 +21,5 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           DRIVE_CSV_FILE_ID: ${{ secrets.DRIVE_CSV_FILE_ID }}
-          DRIVE_OUTPUT_FOLDER_ID: ${{ secrets.DRIVE_OUTPUT_FOLDER_ID }}
+          DRIVE_EXCEL_FILE_ID: ${{ secrets.DRIVE_EXCEL_FILE_ID }}
         run: python main.py

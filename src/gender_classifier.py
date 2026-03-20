@@ -64,7 +64,9 @@ def classify_from_ai(unknown_names: list[str]) -> dict[str, str]:
         unknown_names: List of patient first names not found in CSV
 
     Returns:
-        dict[str, str]: Mapping of {name: gender} for names classified by AI
+        dict[str, str]: Mapping of {name: gender} for names classified by AI.
+            Keys are the original input names (not the AI-returned names),
+            ensuring exact match with the DataFrame.
 
     Raises:
         Exception: If the OpenAI API call fails (connection error, auth error, etc.)
@@ -78,7 +80,12 @@ def classify_from_ai(unknown_names: list[str]) -> dict[str, str]:
 
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-    prompt = f"Classify the gender of these Arabic first names as Male or Female: {', '.join(unknown_names)}"
+    # Number the names so results come back in order
+    numbered = "\n".join(f"{i+1}. {name}" for i, name in enumerate(unknown_names))
+    prompt = (
+        f"Classify the gender of these Arabic first names as Male or Female. "
+        f"Return them in the same order:\n{numbered}"
+    )
 
     response = client.responses.parse(
         model="gpt-5.4-nano",
@@ -86,9 +93,13 @@ def classify_from_ai(unknown_names: list[str]) -> dict[str, str]:
         text_format=PatientGenderList,
     )
 
+    # Map results back using the ORIGINAL input names (by position),
+    # not the AI-returned names which may have different Unicode/diacritics
     result = {}
-    for patient in response.output_parsed.patients:
-        result[patient.name] = patient.gender
+    ai_patients = response.output_parsed.patients
+    for i, name in enumerate(unknown_names):
+        if i < len(ai_patients):
+            result[name] = ai_patients[i].gender
 
     logger.info(f"OpenAI classified {len(result)} names")
     return result

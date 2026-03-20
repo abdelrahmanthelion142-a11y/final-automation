@@ -109,29 +109,42 @@ def upload_csv(df: pd.DataFrame, file_id: str) -> None:
         os.unlink(tmp_path)
 
 
-def upload_excel(local_path: str, folder_id: str) -> None:
-    """Upload an Excel file to a Google Drive folder.
+def upload_excel(local_path: str, file_id: str) -> None:
+    """Upload an Excel file to Google Drive, overwriting an existing file.
+
+    By updating an existing file owned by the user, we bypass the 
+    `storageQuotaExceeded` error that occurs when Service Accounts try to 
+    create new files on personal (free tier) Google Drive accounts.
 
     Args:
         local_path: Local filesystem path to the Excel file
-        folder_id: Google Drive folder ID to upload to
+        file_id: Google Drive file ID of the existing Excel file to overwrite
 
     Side effects:
-        - Creates a new file in the specified Drive folder
+        - Overwrites the existing file on Drive
         - Logs success message
 
     Raises:
         Exception: If the upload fails
     """
     service = get_service()
-    filename = os.path.basename(local_path)
 
     media = MediaFileUpload(
         local_path,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        resumable=True
     )
 
-    file_metadata = {"name": filename, "parents": [folder_id]}
-    service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+    # We do NOT pass parents or metadata when updating content
+    service.files().update(
+        fileId=file_id,
+        media_body=media,
+        supportsAllDrives=True,
+    ).execute()
 
-    logger.info(f"Uploaded {filename} to Drive folder {folder_id}")
+    # Rename the file in Drive so the user knows what date range it covers
+    new_name = os.path.basename(local_path)
+    metadata = {'name': new_name}
+    service.files().update(fileId=file_id, body=metadata, supportsAllDrives=True).execute()
+
+    logger.info(f"Updated Excel file on Drive and renamed to {new_name}")

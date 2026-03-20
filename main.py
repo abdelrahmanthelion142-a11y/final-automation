@@ -156,10 +156,10 @@ def main():
     export_to_excel(df, filename)
 
     try:
-        upload_excel(filename, os.environ["DRIVE_OUTPUT_FOLDER_ID"])
-        logger.info(f"Excel uploaded to Google Drive (folder: Output)")
+        upload_excel(filename, os.environ["DRIVE_EXCEL_FILE_ID"])
+        logger.info(f"Excel updated on Google Drive")
     except Exception as e:
-        logger.error(f"Failed to upload Excel to Drive: {e}")
+        logger.error(f"Failed to update Excel on Drive: {e}")
         raise
 
     logger.info(f"✅ Run complete. {len(df)} messages ready.")

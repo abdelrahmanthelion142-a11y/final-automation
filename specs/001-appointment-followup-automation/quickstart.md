@@ -26,7 +26,7 @@
    OPENAI_API_KEY=your_openai_api_key
    GOOGLE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
    DRIVE_CSV_FILE_ID=your_google_drive_csv_file_id
-   DRIVE_OUTPUT_FOLDER_ID=your_google_drive_output_folder_id
+   DRIVE_EXCEL_FILE_ID=your_google_drive_excel_file_id
    ```
 
 3. **Run the pipeline**:
@@ -45,8 +45,8 @@
    - Export to Excel with WhatsApp links
    - Upload to Google Drive
 
-4. **Check output**: The Excel file will appear in your configured Google
-   Drive output folder as `WellSkin_Followup_YYYY-MM-DD_to_YYYY-MM-DD.xlsx`.
+4. **Check output**: The Excel file will be updated in your Google Drive. 
+   The file name will automatically be renamed to match the date range `WellSkin_Followup_YYYY-MM-DD_to_YYYY-MM-DD.xlsx`.
 
 ## GitHub Actions (automated daily runs)
 
@@ -55,7 +55,7 @@
    - `OPENAI_API_KEY`
    - `GOOGLE_SERVICE_ACCOUNT_JSON`
    - `DRIVE_CSV_FILE_ID`
-   - `DRIVE_OUTPUT_FOLDER_ID`
+   - `DRIVE_EXCEL_FILE_ID`
 
 2. The pipeline runs every Sunday at midnight Egypt time (22:00 UTC Saturday)
    via the cron schedule in `.github/workflows/daily_run.yml`.
@@ -68,8 +68,9 @@
 1. Create a Google Cloud project and enable the Drive API.
 2. Create a Service Account and download the JSON key.
 3. Upload an initial `classified_patients.csv` to Drive with headers: `Patient,Gender`.
-4. Share the CSV file **and** the output folder with the service account email.
-5. Copy the file ID and folder ID from the Drive URLs into your secrets.
+4. Create an empty Google Sheets or Excel file in your Drive to serve as the output target.
+5. Share **both** the CSV file and the empty Excel file with the Service Account email (give Editor access).
+6. Copy the file IDs for both files from their Drive URLs into your secrets.
 
 ## Verifying a Run
 
