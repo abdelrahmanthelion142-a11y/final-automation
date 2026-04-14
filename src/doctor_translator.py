@@ -28,7 +28,7 @@ DOCTOR_TRANSLATIONS: dict[str, str] = {
     "nehal": "نهال",
     "badr": "بدر",
     "mohamed abdelwahab": "محمد عبد الوهاب",
-    "mohamed azab" : "محمد عزب",
+    "mohamed azab": "محمد عزب",
     "samar": "سمر",
     "dina": "دينا",
     "hanan": "حنان",
@@ -39,13 +39,14 @@ DOCTOR_TRANSLATIONS: dict[str, str] = {
     "asmaa": "أسماء",
     "miraam": "ميرام",
     "eman ahmed": "إيمان أحمد",
-    "eman nasr" : "يمان نصر",
-    "ragaa":"رجاء",
+    "eman nasr": "يمان نصر",
+    "ragaa": "رجاء",
     "walaa": "ولاء",
     "najwan": "نجوان",
-    "mona" :"مني",
-    "yousra" : "يسرا",
-    "mahmoud" : "محمود"
+    "mona": "مني",
+    "yousra": "يسرا",
+    "mahmoud": "محمود",
+    "ranya": "رانيا",
 }
 
 FULL_NAME_DOCTORS = {"eman", "mohamed"}
