@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 import pandas as pd
 
-from main import get_date_range, get_date_range_for_filename
+from main import get_date_range
 
 
 class TestGetDateRange:
@@ -19,12 +19,26 @@ class TestGetDateRange:
             hour=0, minute=0, second=0, microsecond=0
         )
         expected_start = today - timedelta(days=7)
-        expected_end = today
+        expected_end = today - timedelta(days=1)
 
         assert start.startswith(expected_start.strftime("%Y-%m-%d"))
         assert end.startswith(expected_end.strftime("%Y-%m-%d"))
 
-    def test_start_date_is_7_days_before_end(self):
+    def test_excludes_today(self):
+        start, end = get_date_range()
+
+        start_dt = datetime.strptime(start[:10], "%Y-%m-%d").replace(
+            tzinfo=timezone.utc
+        )
+        end_dt = datetime.strptime(end[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        today = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        assert end_dt < today
+        assert start_dt < today
+
+    def test_start_date_is_6_days_before_end(self):
         start, end = get_date_range()
 
         start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.000Z")
@@ -33,7 +47,7 @@ class TestGetDateRange:
         )
 
         difference = (end_dt - start_dt).days
-        assert difference == 7
+        assert difference == 6
 
     def test_start_time_is_midnight(self):
         start, _ = get_date_range()
@@ -49,53 +63,6 @@ class TestGetDateRange:
         assert ".000Z" in start
         assert "T" in end
         assert ".000Z" in end
-
-
-class TestGetDateRangeForFilename:
-    """Tests for get_date_range_for_filename function."""
-
-    def test_returns_future_7_days_range(self):
-        result = get_date_range_for_filename()
-        start, end = result
-
-        today = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        expected_start = today
-        expected_end = today + timedelta(days=7)
-
-        assert start == expected_start.strftime("%Y-%m-%d")
-        assert end == expected_end.strftime("%Y-%m-%d")
-
-    def test_end_is_7_days_after_start(self):
-        start, end = get_date_range_for_filename()
-
-        start_dt = datetime.strptime(start, "%Y-%m-%d")
-        end_dt = datetime.strptime(end, "%Y-%m-%d")
-
-        difference = (end_dt - start_dt).days
-        assert difference == 7
-
-    def test_returns_date_only_format(self):
-        start, end = get_date_range_for_filename()
-        assert len(start) == 10
-        assert len(end) == 10
-        assert "-" in start
-        assert "-" in end
-
-
-class TestDateRangeDifference:
-    """Tests to verify past and future date ranges are different."""
-
-    def test_fetch_range_is_past_filename_range_is_future(self):
-        fetch_start, fetch_end = get_date_range()
-        file_start, file_end = get_date_range_for_filename()
-
-        fetch_start_date = fetch_start[:10]
-        fetch_end_date = fetch_end[:10]
-
-        assert fetch_start_date != file_start
-        assert fetch_end_date != file_end
 
 
 class TestMainFunction:

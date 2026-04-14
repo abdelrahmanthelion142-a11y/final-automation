@@ -27,12 +27,12 @@ logger = logging.getLogger("wellskin")
 
 
 def get_date_range() -> tuple[str, str]:
-    """Calculate the7-day appointment window date range.
+    """Calculate the 7-day appointment window date range (excluding today).
 
     Returns:
         tuple[str, str]: Two ISO-formatted strings:
-            - Start: Today - 7 days at 00:00:00 UTC
-            - End: Today at 23:59:59 UTC
+            - Start: 7 days ago at 00:00:00 UTC
+            - End: Yesterday at 23:59:59 UTC
     """
     today = datetime.now(timezone.utc).replace(
         hour=0, minute=0, second=0, microsecond=0
@@ -40,26 +40,7 @@ def get_date_range() -> tuple[str, str]:
     from_date = today - timedelta(days=7)
 
     start = from_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-    end = today.strftime("%Y-%m-%dT23:59:59.000Z")
-
-    return start, end
-
-
-def get_date_range_for_filename() -> tuple[str, str]:
-    """Calculate the date range for Excel file naming.
-
-    Returns:
-        tuple[str, str]: Two date strings in YYYY-MM-DD format:
-            - Start date (today)
-            - End date (today + 7 days)
-    """
-    today = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    to_date = today + timedelta(days=7)
-
-    start = today.strftime("%Y-%m-%d")
-    end = to_date.strftime("%Y-%m-%d")
+    end = (today - timedelta(days=1)).strftime("%Y-%m-%dT23:59:59.000Z")
 
     return start, end
 
@@ -149,7 +130,8 @@ def main():
 
     df["Message"] = df.apply(generate_message, axis=1)
 
-    start_date, end_date = get_date_range_for_filename()
+    start_date = date_from[:10]
+    end_date = date_to[:10]
     filename = f"WellSkin_Followup_{start_date}_to_{end_date}.xlsx"
 
     export_to_excel(df, filename)
