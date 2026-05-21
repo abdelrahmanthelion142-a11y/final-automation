@@ -17,7 +17,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run pipeline
         env:
-          EHR_TOKEN: ${{ secrets.EHR_TOKEN }}
+          EHR_EMAIL: ${{ secrets.EHR_EMAIL }}
+          EHR_PASSWORD: ${{ secrets.EHR_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           DRIVE_CSV_FILE_ID: ${{ secrets.DRIVE_CSV_FILE_ID }}
