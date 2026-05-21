@@ -91,8 +91,8 @@ def sample_appointments_api_response():
     """Sample EHR API response for appointments."""
     return {
         "data": {
-            "appointments": {
-                "appointments": [
+            "listAppointments": {
+                "items": [
                     {
                         "id": "appt-1",
                         "date": "2024-01-15",
@@ -118,7 +118,11 @@ def sample_appointments_api_response():
                         "branch": {"id": "branch-1", "name": "Main Branch"},
                     },
                 ],
-                "appointmentsCount": 2,
+                "meta": {
+                    "currentPage": 1,
+                    "pageCount": 1,
+                    "totalCount": 2,
+                },
             }
         }
     }
@@ -129,9 +133,13 @@ def empty_appointments_api_response():
     """Empty EHR API response for appointments."""
     return {
         "data": {
-            "appointments": {
-                "appointments": [],
-                "appointmentsCount": 0,
+            "listAppointments": {
+                "items": [],
+                "meta": {
+                    "currentPage": 1,
+                    "pageCount": 0,
+                    "totalCount": 0,
+                },
             }
         }
     }

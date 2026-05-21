@@ -12,23 +12,37 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-BASE_URL = "https://cr-ehr.com"
-GRAPHQL_URL = "https://cr-ehr.com/graphql"
+BASE_URL = "https://app.clinicr.health"
+GRAPHQL_URL = "https://app.clinicr.health/graphql"
 
 BRANCH_ID = "e1c823bf-f2a6-42e3-a1dc-c44d2a5b4352"
 
+LOGIN_MUTATION = """
+mutation login($loginInput: LoginInput!) {
+  login(loginInput: $loginInput) {
+    accessToken
+    refreshToken
+    user {
+      id
+      email
+      avatar
+      organizationId
+      language
+      name
+      position
+      __typename
+    }
+    __typename
+  }
+}
+"""
+
 APPOINTMENTS_QUERY = """
-query ($status: AppointmentStatus, $dateFrom: Date, $dateTo: Date, $branchId: ID) {
-    appointments(
-        status: $status
-        dateFrom: $dateFrom
-        dateTo: $dateTo
-        branchId: $branchId
-    ) {
-        appointments {
+query ListAppointments($listAppointmentsInput: ListAppointmentsInput!) {
+    listAppointments(listAppointmentsInput: $listAppointmentsInput) {
+        items {
             id
             date
-            status
             patient {
                 id
                 name
@@ -43,10 +57,64 @@ query ($status: AppointmentStatus, $dateFrom: Date, $dateTo: Date, $branchId: ID
                 name
             }
         }
-        appointmentsCount
+        meta {
+            currentPage
+            pageCount
+            totalCount
+        }
     }
 }
 """
+
+
+def _login(email: str, password: str) -> str:
+    """Authenticate with EHR and return the access token.
+
+    Args:
+        email: User email for authentication
+        password: User password for authentication
+
+    Returns:
+        str: The access token from the login response
+
+    Raises:
+        Exception: If login fails or no access token is returned
+    """
+    headers = {
+        "Content-Type": "application/json",
+        "Origin": BASE_URL,
+        "Referer": BASE_URL + "/appointments",
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "*/*",
+    }
+
+    payload = {
+        "operationName": "login",
+        "query": LOGIN_MUTATION,
+        "variables": {
+            "loginInput": {
+                "email": email,
+                "password": password,
+            }
+        },
+    }
+
+    response = httpx.post(
+        GRAPHQL_URL, json=payload, headers=headers, timeout=30.0, follow_redirects=True
+    )
+    response.raise_for_status()
+
+    data = response.json()
+
+    if "errors" in data:
+        raise Exception(f"Login failed: {data['errors']}")
+
+    access_token = data.get("data", {}).get("login", {}).get("accessToken")
+    if not access_token:
+        raise Exception("Login succeeded but no access token was returned")
+
+    logger.info("Successfully authenticated with EHR")
+    return access_token
 
 
 def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
@@ -71,7 +139,13 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
     Side effects:
         Logs warnings on valid-but-empty API responses
     """
-    token = os.environ.get("EHR_TOKEN", "")
+    email = os.environ.get("EHR_EMAIL", "")
+    password = os.environ.get("EHR_PASSWORD", "")
+
+    if not email or not password:
+        raise Exception("EHR_EMAIL and EHR_PASSWORD environment variables are required")
+
+    token = _login(email, password)
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -82,46 +156,63 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
         "Accept": "*/*",
     }
 
-    payload = {
-        "operationName": None,
-        "query": APPOINTMENTS_QUERY,
-        "variables": {
-            "status": "Scheduled",
-            "dateFrom": date_from,
-            "dateTo": date_to,
-            "branchId": BRANCH_ID,
-        },
-    }
+    all_appointments = []
+    page = 1
+    page_count = 1
 
-    response = httpx.post(
-        GRAPHQL_URL, json=payload, headers=headers, timeout=30.0, follow_redirects=True
-    )
-    response.raise_for_status()
+    while page <= page_count:
+        payload = {
+            "operationName": "ListAppointments",
+            "query": APPOINTMENTS_QUERY,
+            "variables": {
+                "listAppointmentsInput": {
+                    "where": {
+                        "branchId": BRANCH_ID,
+                        "status": "Scheduled",
+                        "dateFrom": date_from,
+                        "dateTo": date_to,
+                    },
+                    "pagination": {
+                        "page": page,
+                        "limit": 100,
+                    },
+                }
+            },
+        }
 
-    data = response.json()
+        response = httpx.post(
+            GRAPHQL_URL, json=payload, headers=headers, timeout=30.0, follow_redirects=True
+        )
+        response.raise_for_status()
 
-    if "errors" in data:
-        logger.warning(f"EHR API returned errors: {data['errors']}")
-        return pd.DataFrame(columns=["Patient", "Date", "Doctor", "PhoneNumber"])
+        data = response.json()
 
-    appt_data = data.get("data", {}).get("appointments", {})
-    appointments = appt_data.get("appointments", []) if appt_data else []
+        if "errors" in data:
+            logger.warning(f"EHR API returned errors: {data['errors']}")
+            return pd.DataFrame(columns=["Patient", "Date", "Doctor", "PhoneNumber"])
 
-    if not appointments:
+        appt_data = data.get("data", {}).get("listAppointments", {})
+        appointments = appt_data.get("items", []) if appt_data else []
+        meta = appt_data.get("meta", {})
+
+        page_count = meta.get("pageCount", 1)
+
+        for appt in appointments:
+            all_appointments.append(
+                {
+                    "Patient": appt.get("patient", {}).get("name", ""),
+                    "Date": appt.get("date", ""),
+                    "Doctor": appt.get("doctor", {}).get("name", ""),
+                    "PhoneNumber": appt.get("patient", {}).get("phoneNo", ""),
+                }
+            )
+
+        page += 1
+
+    if not all_appointments:
         logger.warning("No appointments returned from EHR API")
         return pd.DataFrame(columns=["Patient", "Date", "Doctor", "PhoneNumber"])
 
-    rows = []
-    for appt in appointments:
-        rows.append(
-            {
-                "Patient": appt.get("patient", {}).get("name", ""),
-                "Date": appt.get("date", ""),
-                "Doctor": appt.get("doctor", {}).get("name", ""),
-                "PhoneNumber": appt.get("patient", {}).get("phoneNo", ""),
-            }
-        )
-
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(all_appointments)
     logger.info(f"Fetched {len(df)} appointments from EHR")
     return df
