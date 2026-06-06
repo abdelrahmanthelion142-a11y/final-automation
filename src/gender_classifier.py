@@ -5,14 +5,13 @@ This module classifies patient genders using:
 2. OpenAI fallback for unknown names
 """
 
-import os
 import logging
-from typing import Any
+import os
+from typing import Any, List
 
 import pandas as pd
 from openai import OpenAI
 from pydantic import BaseModel
-from typing import List
 
 
 logger = logging.getLogger(__name__)

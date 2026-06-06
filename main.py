@@ -15,6 +15,14 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import dotenv
+import pandas as pd
+from src.appointments import fetch_appointments
+from src.doctor_translator import translate_doctor
+from src.drive_handler import download_csv, upload_csv, upload_excel
+from src.excel_exporter import export_to_excel
+from src.gender_classifier import classify_genders, update_gender_csv
+from src.message_generator import generate_message
+from src.phone_normalizer import normalize_phones
 
 dotenv.load_dotenv()
 
@@ -64,14 +72,6 @@ def main():
     date_from, date_to = get_date_range()
     logger.info(f"Date range: {date_from} → {date_to}")
 
-    from src.appointments import fetch_appointments
-    from src.excel_exporter import export_to_excel
-    from src.drive_handler import upload_excel, download_csv, upload_csv
-    from src.message_generator import generate_message
-    from src.doctor_translator import translate_doctor
-    from src.gender_classifier import classify_genders, update_gender_csv
-    from src.phone_normalizer import normalize_phones
-
     try:
         df = fetch_appointments(date_from, date_to)
         logger.info(f"Fetched {len(df)} appointments")
@@ -101,9 +101,7 @@ def main():
         gender_df = None
 
     if gender_df is None or len(gender_df) == 0:
-        from pandas import DataFrame
-
-        gender_df = DataFrame(columns=["Patient", "Gender"])
+        gender_df = pd.DataFrame(columns=["Patient", "Gender"])
 
     original_names = set(gender_df["Patient"].tolist()) if len(gender_df) > 0 else set()
 

@@ -4,6 +4,8 @@ import pytest
 import pandas as pd
 from unittest.mock import MagicMock, patch
 
+from src.gender_classifier import PatientGender, PatientGenderList
+
 
 @pytest.fixture
 def sample_appointments_df():
@@ -66,8 +68,6 @@ def mock_openai_response():
     """Factory fixture for creating mock OpenAI responses."""
 
     def _create(gender_mapping):
-        from src.gender_classifier import PatientGenderList, PatientGender
-
         patients = [
             PatientGender(name=name, gender=gender)
             for name, gender in gender_mapping.items()

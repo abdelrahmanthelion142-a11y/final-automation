@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 import pandas as pd
 
-from main import get_date_range
+from main import get_date_range, main
 
 
 class TestGetDateRange:
@@ -95,8 +95,6 @@ class TestMainFunction:
         mock_fetch.return_value = pd.DataFrame(
             columns=["Patient", "Date", "Doctor", "PhoneNumber"]
         )
-
-        from main import main
 
         main()
 
