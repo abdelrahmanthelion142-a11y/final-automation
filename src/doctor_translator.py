@@ -39,7 +39,8 @@ DOCTOR_TRANSLATIONS: dict[str, str] = {
     "asmaa": "أسماء",
     "miraam": "ميرام",
     "eman ahmed": "إيمان أحمد",
-    "eman nasr": "يمان نصر",
+    "eman nasr": "إيمان نصر",
+    "eman nasar": "إيمان نصر",
     "ragaa": "رجاء",
     "walaa": "ولاء",
     "najwan": "نجوان",
@@ -47,6 +48,9 @@ DOCTOR_TRANSLATIONS: dict[str, str] = {
     "yousra": "يسرا",
     "mahmoud": "محمود",
     "ranya": "رانيا",
+    "omniaa": "أُمنية",
+    "sara": "سارة",
+    "osama": "أسامة",
 }
 
 FULL_NAME_DOCTORS = {"eman", "mohamed"}
@@ -72,10 +76,13 @@ def translate_doctor(english_name: str) -> str:
         - For doctors named "eman" or "mohamed", use the full lowercase name as lookup key
         - For all other doctors, use just the first name as lookup key
     """
-    first_name = english_name.strip().split()[0].lower()
+    name = english_name.strip()
+    if name.lower().startswith("dr. "):
+        name = name[4:]
+    first_name = name.split()[0].lower()
 
     if first_name in FULL_NAME_DOCTORS:
-        lookup_key = english_name.strip().lower()
+        lookup_key = name.lower()
     else:
         lookup_key = first_name
 
