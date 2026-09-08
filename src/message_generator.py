@@ -1,9 +1,3 @@
-"""Message generator module for creating personalised Arabic follow-up messages.
-
-This module generates gender-aware Arabic WhatsApp follow-up messages
-using the correct verb forms based on patient gender.
-"""
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -33,7 +27,7 @@ def generate_message(row: dict) -> str:
         str: Complete Arabic message
     """
     verb = get_verb_form(row["Gender"])
-    title = "د/" if row["Doctor"] != "آية" else ""
+    title = "د/" if row["Doctor"] != "آية" else "" #because aya is not a doctor she is a speciliast so we strip the title
 
     msg = f"""مساء الخير أ / {row["Patient"]}
 نتمنى حضرتك {verb} بخير.

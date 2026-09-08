@@ -1,18 +1,9 @@
-"""Gender classifier module for determining patient gender from names.
-
-This module classifies patient genders using:
-1. CSV lookup from Google Drive (known genders)
-2. OpenAI fallback for unknown names
-"""
-
 import logging
 import os
-from typing import Any, List
 
 import pandas as pd
 from openai import OpenAI
 from pydantic import BaseModel
-
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +14,7 @@ class PatientGender(BaseModel):
 
 
 class PatientGenderList(BaseModel):
-    patients: List[PatientGender]
+    patients: list[PatientGender]
 
 
 def classify_from_csv(
@@ -78,25 +69,50 @@ def classify_from_ai(unknown_names: list[str]) -> dict[str, str]:
     if not unknown_names:
         return {}
 
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"], base_url="https://openrouter.ai/api/v1"
+    )
 
     # Number the names so results come back in order
-    numbered = "\n".join(f"{i+1}. {name}" for i, name in enumerate(unknown_names))
+    numbered = "\n".join(f"{i + 1}. {name}" for i, name in enumerate(unknown_names))
     prompt = (
         f"Classify the gender of these Arabic first names as Male or Female. "
         f"Return them in the same order:\n{numbered}"
     )
 
-    response = client.responses.parse(
-        model="gpt-5.4-nano",
-        input=[{"role": "user", "content": prompt}],
-        text_format=PatientGenderList,
+    def _add_additional_properties(s: dict) -> None:
+        if s.get("type") == "object":
+            s["additionalProperties"] = False
+        for v in s.values():
+            if isinstance(v, dict):
+                _add_additional_properties(v)
+            elif isinstance(v, list):
+                for item in v:
+                    if isinstance(item, dict):
+                        _add_additional_properties(item)
+
+    schema = PatientGenderList.model_json_schema()
+    _add_additional_properties(schema)
+
+    response = client.chat.completions.create(
+        model="openai/gpt-5.4-nano",
+        messages=[{"role": "user", "content": prompt}],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "PatientGenderList",
+                "schema": schema,
+                "strict": True,
+            },
+        },
     )
 
     # Map results back using the ORIGINAL input names (by position),
     # not the AI-returned names which may have different Unicode/diacritics
     result = {}
-    ai_patients = response.output_parsed.patients
+    ai_patients = PatientGenderList.model_validate_json(
+        response.choices[0].message.content
+    ).patients
     for i, name in enumerate(unknown_names):
         if i < len(ai_patients):
             result[name] = ai_patients[i].gender

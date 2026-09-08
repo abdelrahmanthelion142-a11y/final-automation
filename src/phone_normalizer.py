@@ -15,7 +15,8 @@ def is_valid_phone(number):
     return len(number) in [10, 11, 12, 13, 14, 15]
 
 
-def normalize_phone(number: str) -> str:
+def normalize_phone(number: str) -> str: # the follwing function might seem bisare and not the best way at all to hanlde normalizing phone numbers but for unnormalized numbers i had to go through the clinics appointment data that is logged on paper 
+    #and see the actuall phone number and identify some weird patterns that the people using the crm are doing so thats the only way to normalize the phone numbers
     """Normalize a phone number to Egyptian local format.
 
     Args:

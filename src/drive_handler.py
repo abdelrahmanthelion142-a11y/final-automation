@@ -1,12 +1,5 @@
-"""Google Drive handler module for CSV and Excel file operations.
-
-This module isolates ALL Google Drive interactions including:
-- Downloading CSV files (gender classifications)
-- Uploading CSV files (updated gender classifications)
-- Uploading Excel files (follow-up output)
-
-Uses Service Account authentication for headless operation in CI/CD.
-"""
+#this file is mostly written by ai because it required a lot of tinkering with google drive and creating a bot to be able to upload files and i left the agent trying untill it worked 
+#because the docs are confusing note the each time the githhub action runs the file gets replaced not a new file is created this is because to upload files you need google cloud credits (its realy weird that it works but if it works dont touch it they say)
 
 import json
 import logging

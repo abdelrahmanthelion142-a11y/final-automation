@@ -1,8 +1,3 @@
-"""Excel exporter module for generating follow-up Excel files.
-
-This module creates Excel files with WhatsApp hyperlinks for each
-patient follow-up message.
-"""
 
 import urllib.parse
 import logging
@@ -48,19 +43,19 @@ def make_wa_url(phone: str, message: str) -> str:
 
     Returns:
         str: WhatsApp URL (https://wa.me/{phone}?text={encoded_message})
-            Returns empty string if phone contains "?" (flagged as invalid)
+            Returns empty string if phone contains "?" (flagged as invalid by the normalization function)
     """
     if "?" in phone:
         return ""
 
     clean = phone.replace("+", "").replace(" ", "")
 
-    # Convert local format (starting with 0) to international format
+    # add country code 
     if clean.startswith("0"):
         clean = "20" + clean[1:]
 
     encoded_message = urllib.parse.quote(message)
-    return f"https://wa.me/{clean}?text={encoded_message}"
+    return f"https://wa.me/{clean}?text={encoded_message}" #this link when directly pressed opens a whatsapp chat with the phone number with the message written in the text box all you have to do is press send 
 
 
 def export_to_excel(df: pd.DataFrame, output_path: str) -> str:

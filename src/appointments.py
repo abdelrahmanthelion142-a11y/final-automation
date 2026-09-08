@@ -1,9 +1,3 @@
-"""EHR appointments fetcher module.
-
-This module isolates ALL EHR API interactions. It fetches appointment
-data from the EHR GraphQL API and returns it as a pandas DataFrame.
-"""
-
 import os
 import logging
 
@@ -84,8 +78,8 @@ def _login(email: str, password: str) -> str:
         "Content-Type": "application/json",
         "Origin": BASE_URL,
         "Referer": BASE_URL + "/appointments",
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "*/*",
+        "User-Agent": "Mozilla/5.0", #the api requires the api requests to be from a browser so we mock that i have not been using
+        "Accept": "*/*",             #the api unathorized i took permision from the clinic owner and crm developer that i will perform this automation
     }
 
     payload = {
@@ -152,8 +146,8 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
         "Content-Type": "application/json",
         "Origin": BASE_URL,
         "Referer": BASE_URL + "/appointments",
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "*/*",
+        "User-Agent": "Mozilla/5.0", #the api requires the api requests to be from a browser so we mock that 
+        "Accept": "*/*",             #i have not been using the api unathorized i took permision from the clinic owner and crm developer that i will perform this automation
     }
 
     all_appointments = []
@@ -174,11 +168,13 @@ def fetch_appointments(date_from: str, date_to: str) -> pd.DataFrame:
                     },
                     "pagination": {
                         "page": page,
-                        "limit": 100,
-                    },
+                        "limit": 100, #i explicitly put a limit in the query because the graphql api automaticly adds a limit of 100 
+                    },                #so i explcitly added it so its clear that we have to loop over the pages and cant fetch the data at once
+                        
                 }
             },
         }
+
 
         response = httpx.post(
             GRAPHQL_URL, json=payload, headers=headers, timeout=30.0, follow_redirects=True
