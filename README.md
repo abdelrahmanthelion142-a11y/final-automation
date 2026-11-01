@@ -3,7 +3,7 @@
 This project is a classic it automation project for a clinic
 
 ## Motivation Behind It
-well before this project was built a relative of mine had to log in to the crm and manually look at each appoinment the doctor the pateint name the phone number manually type the message and send it to the patient AND EACH WEEK THERE IS LIKE 150 APPOINTMENTS so it was realy time wasting
+well before this project was built a relative of mine had to log in to the crm and manually look at each appoinment the doctor the pateint name the phone number manually type the message and send it to the patient AND EACH WEEK THERE IS LIKE 150 APPOINTMENTS
 
 so i thought there must be a better way to do this so what did i do i created a notebook where i go on the crm and extract the appoinment data by the genius method of (CTRL + C , CTRL + v ) and do that for each page and then the phone numbers of each patinet are not text they are pop image when you hover over the appoinmetnt row so i wrote some javascript to trigger the hover state on each appoinment row take a screen shot of it go to the next and use pytesseract to extract the phone numbers then it normalizes phone numbers uses open ai to determine the names are male or female hen creates a excel file
 
